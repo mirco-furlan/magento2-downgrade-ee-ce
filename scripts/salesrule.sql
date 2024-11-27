@@ -67,6 +67,9 @@ ALTER TABLE `salesrule_product_attribute`
     DROP COLUMN `row_id`;
 
 -- Salesrule
+ALTER TABLE `salesrule_label`
+    DROP FOREIGN KEY `SALESRULE_LABEL_ROW_ID_SALESRULE_ROW_ID`,
+    DROP COLUMN `row_id`;
 ALTER TABLE `salesrule`
     DROP FOREIGN KEY `SALESRULE_RULE_ID_SEQUENCE_SALESRULE_SEQUENCE_VALUE`,
     DROP COLUMN `row_id`,
