@@ -9,7 +9,8 @@ DROP TABLE IF EXISTS
     `magento_reminder_rule`;
 
 -- Enable `rule_id` column for salesrule
-
+ALTER TABLE `salesrule_label`
+    ADD COLUMN `rule_id` INT(10) UNSIGNED NOT NULL COMMENT 'Rule ID';
 ALTER TABLE `salesrule_customer_group`
     ADD COLUMN `rule_id` INT(10) UNSIGNED NOT NULL COMMENT 'Rule ID';
 ALTER TABLE `salesrule_website`
@@ -31,6 +32,9 @@ WHERE p.`last_updated_in` IS NULL;
 
 -- Populate `rule_id` column for salesrule
 
+UPDATE `salesrule_label` v INNER JOIN `salesrule` e ON v.`row_id` = e.`row_id`
+SET v.`rule_id` = e.`rule_id`
+WHERE 1;
 UPDATE `salesrule_customer_group` v INNER JOIN `salesrule` e ON v.`row_id` = e.`row_id`
 SET v.`rule_id` = e.`rule_id`
 WHERE 1;
@@ -69,7 +73,10 @@ ALTER TABLE `salesrule_product_attribute`
 -- Salesrule
 ALTER TABLE `salesrule_label`
     DROP FOREIGN KEY `SALESRULE_LABEL_ROW_ID_SALESRULE_ROW_ID`,
+    DROP `SALESRULE_LABEL_ROW_ID_STORE_ID`,
     DROP COLUMN `row_id`;
+    -- MODIFY COLUMN `rule_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Entity ID';
+
 ALTER TABLE `salesrule`
     DROP FOREIGN KEY `SALESRULE_RULE_ID_SEQUENCE_SALESRULE_SEQUENCE_VALUE`,
     DROP COLUMN `row_id`,
