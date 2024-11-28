@@ -353,8 +353,10 @@ ALTER TABLE `catalog_product_entity_varchar`
 ALTER TABLE `catalog_product_entity_media_gallery_value_to_entity`
     DROP FOREIGN KEY `CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
     DROP INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`value_id`,`entity_id`),
     ADD CONSTRAINT `CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_VAL_ID_ENTT_ID` UNIQUE KEY (`value_id`,`entity_id`),
-	DROP COLUMN `row_id`;
+    DROP COLUMN `row_id`;
 
 -- Gallery value
 ALTER TABLE `catalog_product_entity_media_gallery_value`
