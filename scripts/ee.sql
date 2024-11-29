@@ -39,7 +39,6 @@ DROP TABLE IF EXISTS
     `magento_giftcardaccount_history`,
     `magento_giftcardaccount_pool`,
     `magento_giftregistry_data`,
-    `magento_giftregistry_item`,
     `magento_giftregistry_entity`,
     `magento_giftregistry_item`,
     `magento_giftregistry_item_option`,
