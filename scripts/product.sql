@@ -74,6 +74,47 @@ FROM `catalog_product_entity` e
                          ON e.`entity_id` = p.`entity_id` AND e.`updated_in` = p.`last_updated_in`
 WHERE p.`last_updated_in` IS NULL;
 
+-- CLean duplicate for whishlist and whishlist_item
+
+CREATE TEMPORARY TABLE latest_wishlists (
+    customer_id INT UNSIGNED,
+    latest_wishlist_id INT UNSIGNED
+);
+
+INSERT INTO latest_wishlists
+SELECT customer_id, MAX(wishlist_id) AS latest_wishlist_id
+FROM wishlist
+GROUP BY customer_id;
+
+-- Update wishlist_item
+UPDATE wishlist_item wi
+JOIN latest_wishlists lw ON wi.wishlist_id = lw.latest_wishlist_id
+SET wi.wishlist_id = lw.latest_wishlist_id
+WHERE wi.wishlist_id IN (
+    SELECT wishlist_id
+    FROM wishlist
+    WHERE wishlist_id NOT IN (SELECT latest_wishlist_id FROM latest_wishlists)
+);
+
+-- Update wishlist_item_option
+UPDATE wishlist_item_option wio
+JOIN wishlist_item wi ON wio.wishlist_item_id = wi.wishlist_item_id
+JOIN latest_wishlists lw ON wi.wishlist_id = lw.latest_wishlist_id
+SET wio.wishlist_item_id = lw.latest_wishlist_id
+WHERE wi.wishlist_id IN (
+    SELECT wishlist_id
+    FROM wishlist
+    WHERE wishlist_id NOT IN (SELECT latest_wishlist_id FROM latest_wishlists)
+);
+
+-- Delete Older Wishlists
+DELETE
+FROM wishlist
+WHERE wishlist_id NOT IN (SELECT latest_wishlist_id FROM latest_wishlists);
+
+-- Drop the temporary table
+DROP TEMPORARY TABLE latest_wishlists;
+
 -- Populate `entity_id` column for catalog product entity
 
 UPDATE `catalog_product_entity_datetime` v INNER JOIN `catalog_product_entity` e ON v.`row_id` = e.`row_id`
@@ -288,7 +329,6 @@ ALTER TABLE `catalog_product_bundle_selection`
 
 ALTER TABLE `catalog_product_bundle_selection_price`
 	DROP INDEX `CATALOG_PRODUCT_BUNDLE_SELECTION_PRICE_WEBSITE_ID`,
-    ADD CONSTRAINT `CATALOG_PRODUCT_BUNDLE_SELECTION_PRICE_WEBSITE_ID` FOREIGN KEY (`website_id`) REFERENCES `store_website` (`website_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
     ADD CONSTRAINT `FK_DCF37523AA05D770A70AA4ED7C2616E4` FOREIGN KEY (`selection_id`) REFERENCES `catalog_product_bundle_selection` (`selection_id`) ON DELETE CASCADE ON UPDATE RESTRICT;
 
 -- ------------------------------------------------------------------
@@ -358,12 +398,21 @@ ALTER TABLE `catalog_product_entity_media_gallery_value_to_entity`
     DROP COLUMN `row_id`;
 
 -- Gallery value
+-- ALTER TABLE `catalog_product_entity_media_gallery_value`
+--     DROP FOREIGN KEY `CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
+--     DROP INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_VAL_ID_STORE_ID`,
+--     DROP INDEX `CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_ROW_ID`,
+--     ADD INDEX `CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_ENTITY_ID` (`entity_id`),
+--     ADD INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_ENTT_ID_VAL_ID_STORE_ID` (`entity_id`,`value_id`,`store_id`),
+--     ADD CONSTRAINT `CAT_PRD_ENTT_MDA_GLR_VAL_STORE_ID_STORE_STORE_ID` FOREIGN KEY (`store_id`) REFERENCES `store` (`store_id`)  ON DELETE CASCADE,
+--     DROP COLUMN `row_id`;
+
+-- Gallery value
 ALTER TABLE `catalog_product_entity_media_gallery_value`
     DROP FOREIGN KEY `CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
     DROP INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_VAL_ID_STORE_ID`,
     DROP INDEX `CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_ROW_ID`,
     ADD INDEX `CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_ENTITY_ID` (`entity_id`),
-    ADD CONSTRAINT `CAT_PRD_ENTT_MDA_GLR_VAL_ENTT_ID_VAL_ID_STORE_ID` UNIQUE KEY (`entity_id`,`value_id`,`store_id`),
     DROP COLUMN `row_id`;
 
 -- Gallery
@@ -504,14 +553,15 @@ ALTER TABLE `weee_tax`
 
 ALTER TABLE `wishlist`
     DROP FOREIGN KEY `WISHLIST_CUSTOMER_ID_CUSTOMER_ENTITY_ENTITY_ID`,
-    DROP INDEX `WISHLIST_CUSTOMER_ID`,
+    DROP INDEX `WISHLIST_CUSTOMER_ID`;
+
+ALTER TABLE `wishlist`
     ADD CONSTRAINT `WISHLIST_CUSTOMER_ID` UNIQUE KEY (`customer_id`),
     ADD CONSTRAINT `WISHLIST_CUSTOMER_ID_CUSTOMER_ENTITY_ENTITY_ID` FOREIGN KEY (`customer_id`) REFERENCES `customer_entity` (`entity_id`) ON DELETE CASCADE;
 
 ALTER TABLE `wishlist_item`
     DROP FOREIGN KEY `WISHLIST_ITEM_PRODUCT_ID_SEQUENCE_PRODUCT_SEQUENCE_VALUE`,
     ADD CONSTRAINT `WISHLIST_ITEM_PRODUCT_ID_CATALOG_PRODUCT_ENTITY_ENTITY_ID` FOREIGN KEY (`product_id`) REFERENCES `catalog_product_entity` (`entity_id`) ON DELETE CASCADE;
-    ADD CONSTRAINT `WISHLIST_ITEM_WISHLIST_ID_WISHLIST_WISHLIST_ID` FOREIGN KEY (`wishlist_id`) REFERENCES `wishlist` (`wishlist_id`) ON DELETE CASCADE;
 
 DELETE FROM `email_catalog` WHERE `product_id` NOT IN (SELECT `entity_id` FROM `catalog_product_entity`);
 ALTER TABLE `email_catalog`
