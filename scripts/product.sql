@@ -390,11 +390,12 @@ ALTER TABLE `catalog_product_entity_varchar`
     DROP COLUMN `row_id`;
 
 -- Gallery value to entity
+-- TO TEST
 ALTER TABLE `catalog_product_entity_media_gallery_value_to_entity`
     DROP FOREIGN KEY `CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
     DROP INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
-    DROP PRIMARY KEY,
-    ADD PRIMARY KEY (`value_id`,`entity_id`),
+    ADD CONSTRAINT `CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_VAL_ID_ENTT_ID` UNIQUE KEY (`value_id`,`entity_id`),
+    DROP PRIMARY KEY, ADD PRIMARY KEY (`value_id`),
     DROP COLUMN `row_id`;
 
 -- Gallery value
@@ -406,6 +407,14 @@ ALTER TABLE `catalog_product_entity_media_gallery_value_to_entity`
 --     ADD INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_ENTT_ID_VAL_ID_STORE_ID` (`entity_id`,`value_id`,`store_id`),
 --     ADD CONSTRAINT `CAT_PRD_ENTT_MDA_GLR_VAL_STORE_ID_STORE_STORE_ID` FOREIGN KEY (`store_id`) REFERENCES `store` (`store_id`)  ON DELETE CASCADE,
 --     DROP COLUMN `row_id`;
+-- TO TEST
+ALTER TABLE `catalog_product_entity_media_gallery_value`
+    DROP FOREIGN KEY `CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_CAT_PRD_ENTT_ROW_ID`,
+    DROP INDEX `CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_ROW_ID`,
+    DROP INDEX `CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_VAL_ID_STORE_ID`,
+    ADD INDEX `CATALOG_PRODUCT_ENTITY_MEDIA_GALLERY_VALUE_ENTITY_ID` (`entity_id`),
+    ADD CONSTRAINT `CAT_PRD_ENTT_MDA_GLR_VAL_ENTT_ID_VAL_ID_STORE_ID` UNIQUE KEY (`entity_id`,`value_id`,`store_id`),
+	DROP COLUMN `row_id`;
 
 -- Gallery value
 ALTER TABLE `catalog_product_entity_media_gallery_value`
